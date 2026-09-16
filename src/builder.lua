@@ -34,11 +34,15 @@ local function build()
  local code={server={},client={},shared={}}
  for f in p:lines()do
   f=f:gsub("\\","/");local rel=f:match("/script%-src/(.+)$")
-  if rel and not(rel:match("^config/")or rel=="config")then
+  if rel then
+   local protected=rel:match("^config/")or rel:match("/config/")or rel=="config"
+   if protected then local d=output.."/"..rel;md(d:match("(.+)/[^/]+$")or output);wr(d,rd(f))
+   else
    local isLua=rel:lower():match("%.lua$");local side
    if rel:match("^server/")or rel:match("/server/")then side="server"elseif rel:match("^client/")or rel:match("/client/")then side="client"elseif rel:match("^shared/")or rel:match("/shared/")then side="shared"end
    if not side then local n=rel:match("([^/]+)%.lua$");side=n and(n:match("^server$")and"server"or n:match("^client$")and"client")or"shared"end
    if isLua then code[side][#code[side]+1]=mini(rd(f))else local d=output.."/"..rel;md(d:match("(.+)/[^/]+$")or output);wr(d,rd(f))end
+   end
   end
  end;p:close()
  local function join(a)local s="";for _,v in ipairs(a)do s=s..v.."\n"end;return s end
