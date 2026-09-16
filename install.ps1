@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$repo = 'https://raw.githubusercontent.com/SuricatoX/lua_builder/main'
+$repo = 'https://raw.githubusercontent.com/developerstriker/cfxlua-minifier/main'
 $bin = Join-Path $env:LOCALAPPDATA 'lua-minify\bin'
 New-Item -ItemType Directory -Force -Path $bin | Out-Null
 
