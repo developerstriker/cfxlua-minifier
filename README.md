@@ -1,16 +1,22 @@
-# lua_builder into FiveM
+# CfxLua Minifier
 
-<img src="https://seeklogo.com/images/B/bandeira-do-brasil-logo-B6E7F208FF-seeklogo.com.png" width="35vw" height="25vh"> 
-     
-     Português | BR
-     
+Builder/minifier lexical para resources FiveM. Remove comentarios e espacos/quebras desnecessarios, preserva strings normais, long strings, hashes/backticks e operadores CfxLua, e renomeia locals simples. Nao gera bytecode, nao usa VM e nao criptografa strings.
 
-Script que builda os arquivos de um resource feito no 5m em apenas 1 arquivo 
+## Estrutura
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/1235px-Flag_of_the_United_States.svg.png" width="35vw" height="25vh">
+```text
+meu-resource/
+  fxmanifest.lua
+  script-src/           # fonte; script-src/config e ignorada
+  script/               # saida gerada
+```
 
-     English | American
+## Uso
 
+```text
+lua src/builder.lua caminho/para/meu-resource
+```
 
+Sem caminho, o diretorio atual e usado. Todos os arquivos de `script-src` sao copiados para `script`, mantendo subpastas; arquivos `.lua` sao minificados. O `fxmanifest.lua` na raiz e atualizado para carregar somente `script/**/*.lua`.
 
-Script that builds the files from a resource in 5m into 1 resource
+O renomeador e deliberadamente conservador e voltado a locals simples. O processamento e lexical para nao reescrever conteudo protegido de strings.
