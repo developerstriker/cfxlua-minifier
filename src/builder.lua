@@ -26,8 +26,9 @@ end
 local function mini(s)
  if s:sub(1,3)=="\239\187\191" then s=s:sub(4)end
  local t=lex(s);local map,count={},{};local num=0;local function fresh()local n=num;num=num+1;local v="_";repeat v=v..string.char(97+n%26);n=math.floor(n/26)until n==0;return v end
- for i,x in ipairs(t)do if x.k=="k"and x.v=="local"then local j=i+1;if t[j]and t[j].v=="function"then j=j+1 end;while t[j]and t[j].k=="w"do count[t[j].v]=(count[t[j].v]or 0)+1;j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end end end
- for i,x in ipairs(t)do if x.k=="k"and x.v=="local"then local j=i+1;if t[j]and t[j].v=="function"then j=j+1 end;while t[j]and t[j].k=="w"do if count[t[j].v]==1 then map[t[j].v]=map[t[j].v]or fresh();x=t[j];x.v=map[x.v]end;j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end end end
+ local declarations={};local function declare(j)if t[j]and t[j].k=="w"then declarations[#declarations+1]=j;count[t[j].v]=(count[t[j].v]or 0)+1 end end
+ for i,x in ipairs(t)do if x.k=="k"and x.v=="local"then local j=i+1;if t[j]and t[j].v=="function"then j=j+1;declare(j)else repeat declare(j);j=j+1 until not(t[j]and t[j].v==",")end elseif x.k=="k"and x.v=="for"then local j=i+1;while t[j]and t[j].v~="="and t[j].v~="in"and t[j].v~="do"do declare(j);j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end elseif x.k=="k"and x.v=="function"then local j=i+1;while t[j]and t[j].v~="("do j=j+1 end;j=j+1;while t[j]and t[j].v~=")"do declare(j);j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end end end
+ for _,j in ipairs(declarations)do if count[t[j].v]==1 then map[t[j].v]=map[t[j].v]or fresh();t[j].v=map[t[j].v]end end
  local o="";for i,x in ipairs(t)do local p=t[i-1];if x.k=="w"and map[x.v]and not(p and(p.v=="."or p.v==":"))then x.v=map[x.v]end;if p and(p.k=="w"or p.k=="k"or p.k=="n")and(x.k=="w"or x.k=="k"or x.k=="n")then o=o.." "end;o=o..x.v end;return o.."\n"
 end
 local function build()
