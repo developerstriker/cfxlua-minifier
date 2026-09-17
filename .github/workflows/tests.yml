@@ -1,0 +1,11 @@
+name: tests
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: choco install lua -y --no-progress
+      - run: .\tests\run.ps1

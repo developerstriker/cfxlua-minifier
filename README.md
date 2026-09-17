@@ -72,12 +72,14 @@ Também é possível informar diretamente a pasta de fontes:
 lua_minify ./script-src
 ```
 
-O builder remove e recria `script`, processa todos os arquivos de `script-src` recursivamente e ignora `script-src/config`. Todos os arquivos Lua são minificados e agrupados em apenas:
+O builder faz backup da saída anterior como `script.backup-YYYYMMDD-HHMMSS`, processa todos os arquivos de `script-src` recursivamente e copia `config` sem alterações. Todos os demais arquivos Lua são minificados e agrupados em apenas:
 
 ```text
 script/server.lua
 script/client.lua
 ```
+
+Para ignorar caminhos específicos, copie `.minifyignore.example` para `.minifyignore` e liste caminhos relativos a `script-src`, um por linha. O GitHub Actions executa os testes automaticamente em cada push e pull request.
 
 Arquivos que não são Lua são copiados para `script` mantendo suas subpastas.
 

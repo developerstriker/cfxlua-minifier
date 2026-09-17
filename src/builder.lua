@@ -4,6 +4,7 @@ local input=arg[1] or "."
 local resource=input:gsub("[\\/]$", ""); local source=resource.."/script-src"
 if input:match("script%-src[\\/]?$") then source=resource;resource=resource:match("^(.+)[\\/]script%-src[\\/]?$") or "." end
 local output=resource.."/script"
+local ignore={};local ig=io.open(resource.."/.minifyignore","r");if ig then for line in ig:lines()do line=line:gsub("%s+$","");if line~=""and not line:match("^#")then ignore[line:gsub("\\","/")]=true end end;ig:close()end
 local function q(s)return '"'..s:gsub('"','\\"')..'"'end
 local function rd(p)local f=assert(io.open(p,"rb"));local s=f:read("*a");f:close();return s end
 local function wr(p,s)local f=assert(io.open(p,"wb"));f:write(s);f:close()end
@@ -33,11 +34,11 @@ local function mini(s)
  local o="";for i,x in ipairs(t)do local z=i-1;while z>0 and t[z].v==";"do z=z-1 end;local p=t[z];if x.k=="w"and map[x.v]and not(p and(p.v=="."or p.v==":"))then x.v=map[x.v]end;if x.v~=";"then if p and(p.k=="w"or p.k=="k"or p.k=="n")and(x.k=="w"or x.k=="k"or x.k=="n")then o=o.." "end;o=o..x.v end end;return o.."\n"
 end
 local function build()
- os.execute("if exist "..q(output).." rmdir /s /q "..q(output));md(output);local p=io.popen("for /r "..q(source).." %F in (*) do @echo %F");assert(p,"script-src nao encontrado")
+ if os.execute("if exist "..q(output).." ren "..q(output).." script.backup-"..os.date("%Y%m%d-%H%M%S"))then end;md(output);local p=io.popen("for /r "..q(source).." %F in (*) do @echo %F");assert(p,"script-src nao encontrado")
  local code={server={},client={},shared={}}
  for f in p:lines()do
   f=f:gsub("\\","/");local rel=f:match("/script%-src/(.+)$")
-  if rel then
+  if rel and not ignore[rel] then
    local protected=rel:match("^config/")or rel:match("/config/")or rel=="config"
    if protected then local d=output.."/"..rel;md(d:match("(.+)/[^/]+$")or output);wr(d,rd(f))
    else
