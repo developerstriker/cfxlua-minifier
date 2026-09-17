@@ -29,7 +29,7 @@ local function mini(s)
  local declarations={};local function declare(j)if t[j]and t[j].k=="w"then declarations[#declarations+1]=j;count[t[j].v]=(count[t[j].v]or 0)+1 end end
  for i,x in ipairs(t)do if x.k=="k"and x.v=="local"then local j=i+1;if t[j]and t[j].v=="function"then j=j+1;declare(j)else repeat declare(j);j=j+1 until not(t[j]and t[j].v==",")end elseif x.k=="k"and x.v=="for"then local j=i+1;while t[j]and t[j].v~="="and t[j].v~="in"and t[j].v~="do"do declare(j);j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end elseif x.k=="k"and x.v=="function"then local j=i+1;while t[j]and t[j].v~="("do j=j+1 end;j=j+1;while t[j]and t[j].v~=")"do declare(j);j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end end end
  for _,j in ipairs(declarations)do if count[t[j].v]==1 then map[t[j].v]=map[t[j].v]or fresh();t[j].v=map[t[j].v]end end
- local o="";for i,x in ipairs(t)do local p=t[i-1];if x.k=="w"and map[x.v]and not(p and(p.v=="."or p.v==":"))then x.v=map[x.v]end;if p and(p.k=="w"or p.k=="k"or p.k=="n")and(x.k=="w"or x.k=="k"or x.k=="n")then o=o.." "end;o=o..x.v end;return o.."\n"
+ local o="";for i,x in ipairs(t)do local z=i-1;while z>0 and t[z].v==";"do z=z-1 end;local p=t[z];if x.k=="w"and map[x.v]and not(p and(p.v=="."or p.v==":"))then x.v=map[x.v]end;if x.v~=";"then if p and(p.k=="w"or p.k=="k"or p.k=="n")and(x.k=="w"or x.k=="k"or x.k=="n")then o=o.." "end;o=o..x.v end end;return o.."\n"
 end
 local function build()
  os.execute("if exist "..q(output).." rmdir /s /q "..q(output));md(output);local p=io.popen("for /r "..q(source).." %F in (*) do @echo %F");assert(p,"script-src nao encontrado")
