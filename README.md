@@ -54,7 +54,7 @@ meu-resource/
       hud/server/hud.lua
       hud/client/hud.lua
       teste/server/test.lua
-    config/                    # ignorada pelo build
+    config/                    # copiada intacta para script/config
   script/                      # saída gerada
 ```
 
@@ -79,7 +79,7 @@ script/server.lua
 script/client.lua
 ```
 
-Para ignorar caminhos específicos, copie `.minifyignore.example` para `.minifyignore` e liste caminhos relativos a `script-src`, um por linha. O GitHub Actions executa os testes automaticamente em cada push e pull request.
+Para ignorar caminhos específicos, copie `.minifyignore.example` para `.minifyignore` e liste caminhos relativos a `script-src`, um por linha. O caractere `*` funciona como curinga. O build também mostra contagem e tamanho de entrada/saída. Comandos extras do `fxmanifest.lua` são preservados. O GitHub Actions executa os testes automaticamente em cada push e pull request.
 
 Arquivos que não são Lua são copiados para `script` mantendo suas subpastas.
 
