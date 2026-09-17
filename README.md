@@ -116,6 +116,16 @@ Comentários, espaços e quebras de linha desnecessários são removidos. Locals
 
 ## Solução de problemas
 
+## Testes
+
+Para executar a suíte de testes local:
+
+```powershell
+.\tests\run.ps1
+```
+
+Os testes usam um resource temporário e verificam agrupamento server/client, preservação de `config`, strings, hashes, arquivos não-Lua e caminhos de saída.
+
 ### `lua` não é reconhecido
 
 Instale o Lua e abra um novo terminal:
