@@ -10,6 +10,7 @@ local function wr(p,s)local f=assert(io.open(p,"wb"));f:write(s);f:close()end
 local function md(p)os.execute("mkdir "..q(p).." >nul 2>nul")end
 local function ls(s,i)local a,e=s:sub(i):match("^(%[(=*)%[)");if not a then return end;local c="]"..e.."]";local x=s:find(c,i+#a,true);if not x then return s,#s+1 end;return s:sub(i,x+#c-1),x+#c end
 local kw={};for _,v in ipairs({"and","break","do","else","elseif","end","false","for","function","goto","if","in","local","nil","not","or","repeat","return","then","true","until","while"})do kw[v]=1 end
+local protected={self=true,source=true,cb=true,callback=true,data=true,args=true,eventName=true,resourceName=true}
 local function lex(s)
  local t,i={},1;local function a(k,v)t[#t+1]={k=k,v=v}end
  while i<=#s do local c=s:sub(i,i)
@@ -28,7 +29,7 @@ local function mini(s)
  local t=lex(s);local map,count={},{};local num=0;local function fresh()local n=num;num=num+1;local v="_";repeat v=v..string.char(97+n%26);n=math.floor(n/26)until n==0;return v end
  local declarations={};local function declare(j)if t[j]and t[j].k=="w"then declarations[#declarations+1]=j;count[t[j].v]=(count[t[j].v]or 0)+1 end end
  for i,x in ipairs(t)do if x.k=="k"and x.v=="local"then local j=i+1;if t[j]and t[j].v=="function"then j=j+1;declare(j)else repeat declare(j);j=j+1 until not(t[j]and t[j].v==",")end elseif x.k=="k"and x.v=="for"then local j=i+1;while t[j]and t[j].v~="="and t[j].v~="in"and t[j].v~="do"do declare(j);j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end elseif x.k=="k"and x.v=="function"then local j=i+1;while t[j]and t[j].v~="("do j=j+1 end;j=j+1;while t[j]and t[j].v~=")"do declare(j);j=j+1;if not t[j]or t[j].v~=","then break end;j=j+1 end end end
- for _,j in ipairs(declarations)do if count[t[j].v]==1 then map[t[j].v]=map[t[j].v]or fresh();t[j].v=map[t[j].v]end end
+ for _,j in ipairs(declarations)do if count[t[j].v]==1 and not protected[t[j].v] then map[t[j].v]=map[t[j].v]or fresh();t[j].v=map[t[j].v]end end
  local o="";for i,x in ipairs(t)do local z=i-1;while z>0 and t[z].v==";"do z=z-1 end;local p=t[z];if x.k=="w"and map[x.v]and not(p and(p.v=="."or p.v==":"))then x.v=map[x.v]end;if x.v~=";"then if p and(p.k=="w"or p.k=="k"or p.k=="n")and(x.k=="w"or x.k=="k"or x.k=="n")then o=o.." "end;o=o..x.v end end;return o.."\n"
 end
 local function build()
@@ -49,6 +50,8 @@ local function build()
  end;p:close()
  local function join(a)local s="";for _,v in ipairs(a)do s=s..v.."\n"end;return s end
  wr(output.."/server.lua",join(code.shared)..join(code.server));wr(output.."/client.lua",join(code.shared)..join(code.client))
+ local luac=io.popen("where luac 2>nul");local validator=luac and luac:read("*l");if luac then luac:close()end
+ if validator and validator~="" then for _,f in ipairs({output.."/server.lua",output.."/client.lua"})do local ok=os.execute("luac -p "..q(f).." >nul 2>nul");if not ok then error("Lua invalido apos minificacao: "..f)end end;print("Validacao luac: OK")else print("Aviso: luac nao encontrado; validacao sintatica ignorada")end
  local fx,game="cerulean","gta5";local ok,s=pcall(rd,resource.."/fxmanifest.lua");if ok then fx=s:match("fx_version%s+['\"]([^'\"]+)")or fx;game=s:match("game%s+['\"]([^'\"]+)")or game end
  local m="fx_version '"..fx.."'\ngame '"..game.."'\n\nserver_script 'script/server.lua'\nclient_script 'script/client.lua'\n";wr(resource.."/fxmanifest.lua",m)
 end
