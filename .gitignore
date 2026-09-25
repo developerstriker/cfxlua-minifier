@@ -1,4 +1,6 @@
 resource
+*.tgz
+node_modules/
 dist
 backup
 src/config.lua

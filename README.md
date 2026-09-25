@@ -1,5 +1,31 @@
 # CfxLua Minifier
 
+## Pacote npm
+
+Requisitos: Windows, Node.js 20 ou superior e Lua 5.4. O pacote inclui o builder; nao baixa codigo durante o build. O motor atual ainda tem limitacoes de escopo e de preservacao de manifestos multilinha: teste a saida antes de usar em producao.
+
+Instale diretamente deste repositorio (independe de publicacao no registro npm):
+
+```powershell
+npm install -g github:developerstriker/cfxlua-minifier
+lua_minify --help
+lua_minify ./script-src
+```
+
+Para instalar o arquivo de distribuicao local:
+
+```powershell
+npm install -g ./cfxlua-minifier-0.1.0.tgz
+```
+
+O launcher procura `lua`, `lua54` ou `lua5.4` no PATH. Se necessario, configure o executavel explicitamente:
+
+```powershell
+$env:LUA_BIN = 'C:\Lua\lua54.exe'
+```
+
+Para empacotar e publicar no registro npm, o mantenedor deve executar `npm test`, `npm pack`, `npm login` e `npm publish` (o nome precisa estar disponivel). Somente apos essa publicacao sera possivel usar `npm install -g cfxlua-minifier` ou `npx cfxlua-minifier ./script-src`.
+
 Minificador e builder lexical para scripts Lua/CfxLua de resources FiveM. Ele deixa o código compacto e difícil de ler, mas não oferece proteção ou criptografia.
 
 Não gera bytecode, não cria VM e não criptografa strings.
