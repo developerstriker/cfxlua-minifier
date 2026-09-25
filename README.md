@@ -2,7 +2,7 @@
 
 ## Pacote npm
 
-Requisitos: Windows, Node.js 20 ou superior e Lua 5.4. O pacote inclui o builder; nao baixa codigo durante o build. O motor atual ainda tem limitacoes de escopo e de preservacao de manifestos multilinha: teste a saida antes de usar em producao.
+Requisitos: Windows, Node.js 20 ou superior e Lua 5.4. O pacote inclui o builder e o analisador Lua; nao baixa codigo durante o build. A preservacao de manifestos multilinha ainda tem limitacoes: teste a saida antes de usar em producao.
 
 Instale diretamente deste repositorio (independe de publicacao no registro npm):
 
@@ -15,7 +15,7 @@ lua_minify ./script-src
 Para instalar o arquivo de distribuicao local:
 
 ```powershell
-npm install -g ./cfxlua-minifier-0.1.0.tgz
+npm install -g ./cfxlua-minifier-0.1.1.tgz
 ```
 
 O launcher procura `lua`, `lua54` ou `lua5.4` no PATH. Se necessario, configure o executavel explicitamente:
@@ -140,7 +140,11 @@ client_script 'script/client.lua'
 - operadores Lua e CfxLua;
 - arquivos que não são Lua.
 
-Comentários, espaços e quebras de linha desnecessários são removidos. Locals simples podem ser renomeados. Salve os fontes como UTF-8 para evitar caracteres inválidos no editor.
+Comentários, espaços e quebras de linha desnecessários são removidos. Variáveis locais, parâmetros e variáveis de loops são renomeados por escopo, incluindo nomes repetidos em funções diferentes. Globais, campos, strings e o ambiente `_ENV` são preservados. Salve os fontes como UTF-8 para evitar caracteres inválidos no editor.
+
+Por exemplo, `local source = source` mantém a referência externa à direita, mas renomeia a variável local e seus usos posteriores. Não é necessário proteger `source`, `user_id` ou `data` pelo nome.
+
+Cada arquivo agrupado mantém seu próprio bloco de escopo. Formas de sintaxe não suportadas devem ser corrigidas ou suportadas pelo analisador antes do build; não há renomeação aproximada como fallback.
 
 ## Solução de problemas
 

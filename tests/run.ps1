@@ -1,7 +1,12 @@
 $ErrorActionPreference = 'Stop'
+lua (Join-Path $PSScriptRoot 'scope-regression.lua')
+if ($LASTEXITCODE -ne 0) { throw 'Scope regression tests failed' }
 $root = Join-Path $env:TEMP ('cfxlua-minifier-test-' + [guid]::NewGuid().ToString('N'))
 $src = Join-Path $root 'script-src'
 $builder = Join-Path (Split-Path $PSScriptRoot -Parent) 'src\builder.lua'
+Push-Location (Split-Path $PSScriptRoot -Parent)
+lua tests\minifier.lua
+Pop-Location
 New-Item -ItemType Directory -Force -Path (Join-Path $src 'modules\server'),(Join-Path $src 'modules\hud\client'),(Join-Path $src 'config') | Out-Null
 [IO.File]::WriteAllText((Join-Path $src 'modules\server\a.lua'), "-- remove`nlocal serverValue = 1`nprint('server -- intact')`n")
 [IO.File]::WriteAllText((Join-Path $src 'modules\hud\client\b.lua'), "-- remove`nlocal clientValue = 2`nprint(`"client`", ``hash``)`n")

@@ -13,6 +13,7 @@ if (-not $lua) {
 }
 
 Invoke-WebRequest "$repo/src/builder.lua" -OutFile (Join-Path $bin 'builder.lua')
+Invoke-WebRequest "$repo/src/minifier.lua" -OutFile (Join-Path $bin 'minifier.lua')
 $launcher = Join-Path $bin 'lua_minify.cmd'
 $content = "@echo off`r`nlua `"$bin\builder.lua`" %*`r`n"
 [IO.File]::WriteAllText($launcher, $content, [Text.Encoding]::ASCII)
