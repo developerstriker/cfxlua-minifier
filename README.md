@@ -1,185 +1,107 @@
 # CfxLua Minifier
 
-## Pacote npm
+Builder e minifier de resources FiveM escrito em JavaScript. Requer apenas **Node.js 20+ com npm**. Não precisa instalar Lua ou luac.
 
-Requisitos: Windows, Node.js 20 ou superior e Lua 5.4. O pacote inclui o builder e o analisador Lua; nao baixa codigo durante o build. A preservacao de manifestos multilinha ainda tem limitacoes: teste a saida antes de usar em producao.
+## Instalação e atualização
 
-Instale diretamente deste repositorio (independe de publicacao no registro npm):
+Instale Node.js pelo [site oficial](https://nodejs.org/) e execute:
 
-```powershell
+```sh
 npm install -g github:developerstriker/cfxlua-minifier
-lua_minify --help
-lua_minify ./script-src
+lua_minify --version
 ```
 
-Para instalar o arquivo de distribuicao local:
+O mesmo comando atualiza uma instalação existente. A versão JavaScript começa em **0.2.0**. Se um launcher antigo estiver sendo encontrado primeiro, confira `where lua_minify` no Windows ou `which lua_minify` no Linux/macOS e retire o launcher antigo do PATH.
 
-```powershell
-npm install -g ./cfxlua-minifier-0.1.1.tgz
+O pacote ainda não foi publicado no registro npm; use o endereço GitHub acima. Também pode instalar o arquivo local gerado por `npm pack`:
+
+```sh
+npm install -g ./cfxlua-minifier-0.2.0.tgz
 ```
 
-O launcher procura `lua`, `lua54` ou `lua5.4` no PATH. Se necessario, configure o executavel explicitamente:
+## Uso
 
-```powershell
-$env:LUA_BIN = 'C:\Lua\lua54.exe'
-```
+Na raiz do resource:
 
-Para empacotar e publicar no registro npm, o mantenedor deve executar `npm test`, `npm pack`, `npm login` e `npm publish` (o nome precisa estar disponivel). Somente apos essa publicacao sera possivel usar `npm install -g cfxlua-minifier` ou `npx cfxlua-minifier ./script-src`.
-
-Minificador e builder lexical para scripts Lua/CfxLua de resources FiveM. Ele deixa o código compacto e difícil de ler, mas não oferece proteção ou criptografia.
-
-Não gera bytecode, não cria VM e não criptografa strings.
-
-## Instalação
-
-### 1. Instale o Lua 5.4
-
-Windows com WinGet:
-
-```powershell
-winget install --id Lua.Lua
-```
-
-Ou baixe um executável Lua 5.4 para Windows em:
-
-<https://luabinaries.sourceforge.net/download.html>
-
-Confirme que o Lua está disponível:
-
-```bat
-lua -v
-```
-
-### 2. Instale o lua_minify
-
-No PowerShell, execute um único comando:
-
-```powershell
-irm https://raw.githubusercontent.com/developerstriker/cfxlua-minifier/main/install.ps1 | iex
-```
-
-Feche e abra o terminal depois da instalação. Confirme:
-
-```bat
-lua_minify
-```
-
-Se o comando não for encontrado, verifique se `C:\Users\SEU_USUARIO\.local\bin` está no PATH e abra um novo terminal.
-
-## Estrutura do resource
-
-Coloque os fontes em `script-src`. A pasta `script` é gerada automaticamente:
-
-```text
-meu-resource/
-  fxmanifest.lua              # entrada opcional
-  script-src/
-    shared/
-      config.lua
-    modules/
-      hud/server/hud.lua
-      hud/client/hud.lua
-      teste/server/test.lua
-    config/                    # copiada intacta para script/config
-  script/                      # saída gerada
-```
-
-## Build
-
-Entre na raiz do resource e execute:
-
-```bat
+```sh
 lua_minify .
-```
-
-Também é possível informar diretamente a pasta de fontes:
-
-```bat
+# ou
 lua_minify ./script-src
 ```
 
-O builder faz backup da saída anterior como `script.backup-YYYYMMDD-HHMMSS`, processa todos os arquivos de `script-src` recursivamente e copia `config` sem alterações. Todos os demais arquivos Lua são minificados e agrupados em apenas:
+Caminhos com espaços devem estar entre aspas.
 
 ```text
-script/server.lua
-script/client.lua
+resource/
+  fxmanifest.lua
+  script-src/
+    config/settings.lua
+    modules/hud/server/main.lua
+    modules/hud/client/main.lua
+    shared/common.lua
+  script/
+    config/settings.lua
+    server.lua
+    client.lua
 ```
 
-Para ignorar caminhos específicos, copie `.minifyignore.example` para `.minifyignore` e liste caminhos relativos a `script-src`, um por linha. O caractere `*` funciona como curinga. O build também mostra contagem e tamanho de entrada/saída. Comandos extras do `fxmanifest.lua` são preservados. O GitHub Actions executa os testes automaticamente em cada push e pull request.
+- Diretórios chamados `server` ou `client`, em qualquer profundidade, determinam o lado. Se ambos ocorrerem, server tem precedência.
+- Arquivos chamados `server.lua` e `client.lua` também são classificados, quando não há diretório de lado.
+- Demais arquivos Lua são shared: incluídos antes dos arquivos específicos nos dois bundles.
+- Cada arquivo é envolvido em um bloco `do ... end` para isolar suas variáveis locais.
+- Qualquer diretório `config` é copiado byte a byte. Seus arquivos Lua são listados no manifesto antes dos bundles, pelo lado correspondente (shared por padrão).
+- Arquivos não-Lua são copiados byte a byte, preservando os caminhos.
+- A ordem de leitura é alfabética e determinística. Dependências que exigem uma ordem específica devem seguir essa organização.
 
-Arquivos que não são Lua são copiados para `script` mantendo suas subpastas.
+A pasta `script` anterior é mantida como `script.backup-...`. A geração é preparada antes da troca de saída; erros de análise preservam os arquivos existentes.
 
-## Classificação server/client/shared
+O manifesto mantém metadados como `ui_page`, `files`, `dependency` e `data_file`. Declarações literais de scripts, inclusive listas multilinha, são substituídas pelas saídas; imports `@outro_resource/...` são mantidos. Não execute manifestos para descobrir arquivos: a entrada é sempre `script-src`. Declarações dinâmicas de scripts não são suportadas.
 
-Qualquer pasta chamada `server`, em qualquer profundidade, vai para `script/server.lua`:
+## Minificação
 
-```text
-script-src/modules/server/a.lua
-script-src/modules/hud/server/b.lua
-```
-
-Qualquer pasta chamada `client`, em qualquer profundidade, vai para `script/client.lua`:
-
-```text
-script-src/modules/client/a.lua
-script-src/modules/hud/client/b.lua
-```
-
-Arquivos dentro de uma pasta `shared`, arquivos na raiz de `script-src` e arquivos sem uma pasta reconhecida são incluídos nos dois arquivos. O manifesto gerado aponta somente para:
+Remove comentários e espaços desnecessários e renomeia locals por escopo, inclusive parâmetros, loops e closures:
 
 ```lua
-server_script 'script/server.lua'
-client_script 'script/client.lua'
+local source = source
+local user_id = core.Passport(source)
 ```
 
-## O que é preservado
+torna-se:
 
-- strings simples (`'...'` e `"..."`);
-- long strings (`[[...]]` e variantes com `=`);
-- hashes/backticks do CfxLua;
-- operadores Lua e CfxLua;
-- arquivos que não são Lua.
-
-Comentários, espaços e quebras de linha desnecessários são removidos. Variáveis locais, parâmetros e variáveis de loops são renomeados por escopo, incluindo nomes repetidos em funções diferentes. Globais, campos, strings e o ambiente `_ENV` são preservados. Salve os fontes como UTF-8 para evitar caracteres inválidos no editor.
-
-Por exemplo, `local source = source` mantém a referência externa à direita, mas renomeia a variável local e seus usos posteriores. Não é necessário proteger `source`, `user_id` ou `data` pelo nome.
-
-Cada arquivo agrupado mantém seu próprio bloco de escopo. Formas de sintaxe não suportadas devem ser corrigidas ou suportadas pelo analisador antes do build; não há renomeação aproximada como fallback.
-
-## Solução de problemas
-
-## Testes
-
-Para executar a suíte de testes local:
-
-```powershell
-.\tests\run.ps1
+```lua
+local _a=source local _b=core.Passport(_a)
 ```
 
-Os testes usam um resource temporário e verificam agrupamento server/client, preservação de `config`, strings, hashes, arquivos não-Lua e caminhos de saída.
+Strings, long strings, hashes em backticks, campos públicos e globais são preservados. `_ENV` e o `self` implícito de métodos mantêm seu significado.
 
-### `lua` não é reconhecido
+Não gera bytecode, VM ou decodificadores. Não é proteção contra engenharia reversa.
 
-Instale o Lua e abra um novo terminal:
+## Ignorar arquivos
 
-```powershell
-winget install --id Lua.Lua
+Crie `.minifyignore` na raiz. Os caminhos são relativos a `script-src`:
+
+```text
+# comentários
+debug/
+*.skip.lua
+modules/test/*
 ```
 
-### `lua_minify` não é reconhecido
+`*` corresponde a qualquer sequência, incluindo barras. Um caminho terminado em `/` ignora seus descendentes. Arquivos ignorados não são copiados.
 
-Execute novamente o instalador e abra um novo terminal:
+## Testes e desenvolvimento
 
-```powershell
-irm https://raw.githubusercontent.com/developerstriker/cfxlua-minifier/main/install.ps1 | iex
+```sh
+npm test
+npm pack
 ```
 
-### O build cria pastas inesperadas
+Os testes não exigem Lua, incluindo um build com PATH vazio. O workflow do GitHub testa Windows, Linux e macOS. Validações locais não equivalem a testes dentro de um servidor FiveM.
 
-Use a versão atual do instalador e execute o comando a partir da raiz do resource:
+## Limitações
 
-```bat
-lua_minify .
-```
+O analisador suporta o subconjunto Lua implementado e hashes CfxLua; não é um compilador completo de todas as extensões FiveM. Atributos locais `<const>`/`<close>` e operadores adicionais não implementados são rejeitados. Teste o resource no FiveM antes de usar em produção.
 
-O resultado esperado é somente `script/server.lua` e `script/client.lua`, além dos arquivos não-Lua copiados.
+A junção não implementa um carregador de módulos: `require`, retornos de chunks e código que depende de caminhos ou informações de debug precisam de revisão. Um retorno no nível do arquivo termina também o bundle. Links simbólicos são rejeitados.
+
+Para publicar no registro npm, o mantenedor precisa autenticar sua conta e ter acesso ao nome: `npm login`, seguido de `npm publish`.

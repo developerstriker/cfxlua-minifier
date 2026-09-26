@@ -1,11 +1,10 @@
 {
   "name": "cfxlua-minifier",
-  "version": "0.1.1",
-  "description": "Windows CLI for the CfxLua resource builder and minifier",
+  "version": "0.2.0",
+  "description": "Pure JavaScript CfxLua resource builder and minifier",
   "bin": { "lua_minify": "bin/cli.cjs" },
-  "files": ["bin/", "src/builder.lua", "src/minifier.lua", "README.md", ".minifyignore.example"],
+  "files": ["bin/", "src/*.cjs", "README.md", ".minifyignore.example"],
   "engines": { "node": ">=20" },
-  "os": ["win32"],
   "repository": { "type": "git", "url": "git+https://github.com/developerstriker/cfxlua-minifier.git" },
-  "scripts": { "test": "node --test tests/cli.test.cjs && lua tests/minifier.lua && lua tests/scope-regression.lua" }
+  "scripts": { "test": "node --test tests/*.test.cjs" }
 }
